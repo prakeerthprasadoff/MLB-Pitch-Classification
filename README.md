@@ -40,12 +40,19 @@ data/
 
 ### Metadata File
 
-`metadata.csv` should contain at least:
+`metadata.csv` contains :
 
 | Column Name | Description |
 |--------|------------|
 | `video_id` | Video file name |
+| `clip_id` | Clip ID from each video |
+| `start_time` | Start time of the clip with respect to the video |
+| `end_time` | End time of the clip with respect to the video |
+| `duration` | Length of the clip |
 | `pitch_type` | Label for pitch class |
+| `subset` | Whether data used for training or testing |
+
+Among other columns
 
 ---
 
