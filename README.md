@@ -1,203 +1,93 @@
-# ⚾ MLB Pitch Type Classification from Video using CNN-LSTM
+# MLB Pitch Classification Using Deep Learning
 
-This project focuses on classifying baseball pitch types from short video clips using a deep learning architecture that combines **Convolutional Neural Networks (CNNs)** for spatial feature extraction and **Long Short-Term Memory (LSTM)** networks for temporal sequence modeling.
+Automatic classification of baseball pitch types from broadcast video using CNN-LSTM architecture.
 
-The goal is to learn motion and visual patterns across video frames to predict the type of pitch thrown (e.g., Fastball, Curveball, Changeup, etc.).
-
----
-
-## 🚀 Project Overview
-
-- **Task:** Multi-class video classification  
-- **Input:** Short segmented pitch videos  
-- **Output:** Predicted pitch type label  
-- **Model:** ResNet18 (CNN) + LSTM (temporal modeling)  
-- **Framework:** PyTorch  
-
-Each video is treated as a sequence of frames:
-- CNN extracts spatial features per frame
-- LSTM models motion and temporal dynamics across frames
-- Final classifier predicts pitch category
+Authors: Jianchen Hong, Prakeerth Prasad, Amitha Javare Gowda  
+Course: MSAI 349 - Machine Learning  
+Institution: Northwestern University  
+Date: November 2025
 
 ---
 
-## 📁 Dataset
+## Project Overview
 
-This project uses segmented video clips and metadata derived from the **MLB YouTube Dataset**:
+This project develops a deep learning system to automatically classify baseball pitch types from video footage. Using the MLB-YouTube dataset, we trained a CNN-LSTM model to distinguish between six pitch types: Fastball, Slider, Curveball, Changeup, Sinker, and Knucklecurve.
 
-🔗 Dataset Repo: https://github.com/piergiaj/mlb-youtube
-
-### Expected Directory Structure
-
-```
-data/
- └── segmented_videos/
-      ├── video_001.mp4
-      ├── video_002.mp4
-      ├── ...
-      └── metadata.csv
-```
-
-### Metadata File
-
-`metadata.csv` contains :
-
-| Column Name | Description |
-|--------|------------|
-| `video_id` | Video file name |
-| `clip_id` | Clip ID from each video |
-| `start_time` | Start time of the clip with respect to the video |
-| `end_time` | End time of the clip with respect to the video |
-| `duration` | Length of the clip |
-| `pitch_type` | Label for pitch class |
-| `subset` | Whether data used for training or testing |
-
-Among other columns
+### Key Results
+- Best Validation Accuracy: 65.17%
+- Test Accuracy: 56.04%
+- Random Baseline: 16.67%
+- Improvement: +39.37 percentage points
 
 ---
 
-## 🧠 Model Architecture
+## Dataset
 
-### CNN Backbone
-- Pretrained **ResNet18**
-- Final classification layer removed
-- Outputs 512-D feature vector per frame
+MLB-YouTube Dataset (Piergiovanni & Ryoo, CVsports 2018)
 
-### Temporal Modeling
-- **LSTM** processes frame-level embeddings
-- Captures motion patterns across frames
+Source: https://github.com/piergiaj/mlb-youtube
 
-### Final Classifier
-- Fully connected layer on top of LSTM output
-- Softmax via CrossEntropyLoss
+The dataset consists of 20 MLB postseason games from the 2017 season, totaling approximately 42 hours of broadcast footage. Due to hardware constraints, we downloaded 22 full game videos and extracted 599 annotated clips for training and evaluation. The dataset comes pre-annotated with pitch types and speeds, eliminating the need for manual labeling.
 
-```
-Video → Frames → CNN → Feature Sequence → LSTM → FC → Pitch Class
-```
+Class Distribution:
+- Fastball (FF): 277 clips (46.2%)
+- Slider (SL): 132 clips (22.0%)
+- Knucklecurve: 67 clips (11.2%)
+- Sinker (SI): 55 clips (9.2%)
+- Curveball (CU): 41 clips (6.8%)
+- Changeup (CH): 27 clips (4.5%)
 
----
-
-## 🏋️ Training Pipeline
-
-- Frame extraction using OpenCV
-- Uniform sampling of frames per clip
-- Standard image normalization
-- Mini-batch training using PyTorch DataLoader
-
-### Loss & Optimization
-- **Loss:** Cross Entropy Loss
-- **Optimizer:** Adam
-- **Metrics:** Accuracy
-
-Training history includes:
-- Training loss
-- Validation loss
-- Training accuracy
-- Validation accuracy
-
-Loss and accuracy curves are plotted after training.
+Data Split: 70% training (419 clips), 15% validation (89 clips), 15% test (91 clips)
 
 ---
 
-## ▶️ How to Run
+## Model Architecture
 
-### 1. Install Dependencies
+We implemented a CNN-LSTM hybrid architecture that combines spatial and temporal feature extraction.
 
-```bash
-pip install torch torchvision opencv-python pandas numpy tqdm matplotlib seaborn
-```
+Components:
+- CNN (ResNet18): Extracts spatial features from each video frame (512-dimensional feature vectors)
+- LSTM (2 layers, 256 hidden units): Models temporal patterns across the sequence of 16 frames
+- Classification Head: Fully connected layers that map LSTM outputs to 6 pitch type predictions
 
-(If using Google Colab, most packages are preinstalled.)
+The CNN processes each frame independently to capture visual patterns like arm angles and ball position, while the LSTM models how these patterns evolve over time to distinguish between different pitch types.
 
----
-
-### 2. Mount Google Drive (Colab Only)
-
-The notebook assumes dataset access from Google Drive:
-
-```python
-from google.colab import drive
-drive.mount('/content/drive')
-```
-
-Update dataset paths if running locally.
+Training Configuration:
+- Optimizer: Adam with learning rate 0.0001
+- Regularization: Dropout (0.5), weight decay (0.0001), data augmentation
+- Batch Size: 8
+- Epochs: 25 (best model saved at epoch 16)
+- Hardware: Google Colab Pro with NVIDIA A100 GPU
+- Training Time: Approximately 90 minutes
 
 ---
 
-### 3. Configure Paths
+## Results
 
-Update paths in the notebook:
+### Overall Performance
 
-```python
-CONFIG = {
-    "data_dir": "/content/drive/MyDrive/segmented_videos/",
-    "metadata_path": "/content/drive/MyDrive/segmented_videos/metadata.csv"
-}
-```
+| Metric | Value |
+|--------|-------|
+| Best Validation Accuracy | 65.17% |
+| Test Accuracy | 56.04% |
+| Training Accuracy | 91.65% |
+| Weighted F1-Score | 0.55 |
 
----
+### Per-Class Performance
 
-### 4. Train the Model
+| Pitch Type | Precision | Recall | F1-Score |
+|------------|-----------|--------|----------|
+| Fastball (FF) | 0.60 | 0.78 | 0.68 |
+| Slider (SL) | 0.93 | 0.57 | 0.70 |
+| Curveball (CU) | 0.43 | 0.43 | 0.43 |
+| Knucklecurve | 0.25 | 0.29 | 0.27 |
+| Sinker (SI) | 0.11 | 0.14 | 0.12 |
+| Changeup (CH) | 0.00 | 0.00 | 0.00 |
 
-Run all notebook cells:
-
-```
-Runtime → Run All
-```
-
-Training progress is displayed using tqdm progress bars.
-
----
-
-## 📊 Results
-
-The model learns meaningful temporal features from video sequences.  
-Training curves show convergence behavior and validation performance.
-
-Final accuracy depends on:
-- Number of pitch classes
-- Dataset balance
-- Number of training samples
+Key Findings:
+- The model performs well on fastballs (78% recall) and sliders (93% precision)
+- Significant overfitting observed with 35% gap between training and validation accuracy
+- Class imbalance strongly impacts performance on rare pitch types
+- Complete failure on changeups suggests the model relies heavily on velocity patterns rather than mechanical differences
 
 ---
-
-## 🔍 Key Challenges
-
-- Video loading and preprocessing overhead
-- Class imbalance in pitch categories
-- Temporal modeling sensitivity to frame sampling
-- GPU memory constraints for video batches
-
----
-
-## 🔮 Future Improvements
-
-- ✅ Class balancing and data augmentation  
-- ⏳ Try 3D CNNs (C3D / I3D) instead of CNN + LSTM  
-- ⏳ Optical flow features for motion modeling  
-- ⏳ Transformer-based video models (TimeSformer, ViViT)  
-- ⏳ Hyperparameter tuning and cross-validation  
-
----
-
-## 🧑‍💻 Tech Stack
-
-- Python  
-- PyTorch  
-- Torchvision  
-- OpenCV  
-- NumPy / Pandas  
-- Matplotlib / Seaborn  
-
----
-
-## 📌 Acknowledgements
-
-- MLB YouTube Dataset by Piergiovanni et al.  
-- PyTorch and Torchvision pretrained models  
-
----
-
-## 📬 Contact
-
-If you’re interested in discussing this project or related ML work, feel free to connect via GitHub or LinkedIn.
